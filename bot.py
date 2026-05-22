@@ -392,20 +392,28 @@ def main():
 
     logger.info("Bot started.")
 
-    webhook_url = os.environ.get("WEBHOOK_URL")
-    if webhook_url:
-        # Webhook mode — для Render
-        port = int(os.environ.get("PORT", 8443))
-        app.run_webhook(
-            listen="0.0.0.0",
-            port=port,
-            webhook_url=f"{webhook_url}/webhook",
-            url_path="webhook",
-            allowed_updates=Update.ALL_TYPES,
+    if os.environ.get("PORT"):
+        # На Render — запускаем Flask health-check в фоне, бот через polling
+        import threading
+        from flask import Flask as _Flask
+        flask_app = _Flask(__name__)
+
+        @flask_app.route("/")
+        def health():
+            return "OK", 200
+
+        t = threading.Thread(
+            target=lambda: flask_app.run(
+                host="0.0.0.0",
+                port=int(os.environ["PORT"]),
+                use_reloader=False,
+            ),
+            daemon=True,
         )
-    else:
-        # Polling mode — локально
-        app.run_polling(allowed_updates=Update.ALL_TYPES)
+        t.start()
+        logger.info(f"Health-check server started on port {os.environ['PORT']}")
+
+    app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
 if __name__ == "__main__":
