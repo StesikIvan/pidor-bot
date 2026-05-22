@@ -1,0 +1,6 @@
+.env
+pidor.db
+__pycache__/
+*.pyc
+.venv/
+venv/
