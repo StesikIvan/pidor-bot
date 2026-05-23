@@ -1,0 +1,17 @@
+name: Keep Render Alive
+
+on:
+  schedule:
+    # Ping every 5 minutes to prevent Render free tier from sleeping
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping bot health check
+        run: |
+          curl -fsS --max-time 30 https://pidor-bot-9qmz.onrender.com/ \
+            && echo "Bot is alive ✅" \
+            || echo "Bot did not respond (waking up...)"
